@@ -17,10 +17,6 @@
 #include "factor/projection_factor.h"
 #include "factor/marginalization_factor.h"
 
-#include <thread>
-#include <pthread.h>
-#include <syscall.h>
-#include <sys/types.h>
 #include <unordered_map>
 #include <queue>
 #include <opencv2/core/eigen.hpp>
@@ -32,12 +28,11 @@ struct RetriveData
     int cur_index;
     double header;
     Vector3d P_old;
-    Quaterniond Q_old;
-    Vector3d P_cur;
-    Quaterniond Q_cur;
+    Matrix3d R_old;
     vector<cv::Point2f> measurements;
     vector<int> features_ids; 
-    bool use;
+    bool relocalized;
+    bool relative_pose;
     Vector3d relative_t;
     Quaterniond relative_q;
     double relative_yaw;
@@ -132,7 +127,11 @@ class Estimator
     double para_Retrive_Pose[SIZE_POSE];
 
     RetriveData retrive_pose_data, front_pose;
+    vector<RetriveData> retrive_data_vector;
     int loop_window_index;
+    bool relocalize;
+    Vector3d relocalize_t;
+    Matrix3d relocalize_r;
 
     MarginalizationInfo *last_marginalization_info;
     vector<double *> last_marginalization_parameter_blocks;

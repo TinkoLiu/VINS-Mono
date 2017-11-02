@@ -21,12 +21,28 @@ alt="MAV platform" width="240" height="180" border="10" /></a>
 <a href="https://www.youtube.com/embed/CI01qbPWlYY" target="_blank"><img src="http://img.youtube.com/vi/CI01qbPWlYY/0.jpg" 
 alt="Mobile platform" width="240" height="180" border="10" /></a>
 
- MAV application;               Mobile implementation
+ MAV application;               Mobile implementation (Video link for mainland China friends: [Video1](http://www.bilibili.com/video/av10813254/) [Video2](http://www.bilibili.com/video/av10813205/) [Video3](http://www.bilibili.com/video/av10813089/) [Video4](http://www.bilibili.com/video/av10813325/) [Video5](http://www.bilibili.com/video/av10813030/))
 
 **Related Papers**
-* **VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator**, Tong Qin, Peiliang Li, Zhenfei Yang, Shaojie Shen (Submitted to ***T-RO***) [pdf](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/blob/master/support_files/paper/tro2017tong.pdf) 
-* **Autonomous Aerial Navigation Using Monocular Visual-Inertial Fusion**, Yi Lin, Fei Gao, Tong Qin, Wenliang Gao, Tianbo Liu, William Wu, Zhenfei Yang, Shaojie Shen (Submitted to ***JFR***) [pdf](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/blob/master/support_files/paper/jfr2017yi.pdf)  
-
+* **VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator**, Tong Qin, Peiliang Li, Zhenfei Yang, Shaojie Shen [arXiv:1708.03852](https://arxiv.org/abs/1708.03852v1) 
+* **Autonomous Aerial Navigation Using Monocular Visual-Inertial Fusion**, Yi Lin, Fei Gao, Tong Qin, Wenliang Gao, Tianbo Liu, William Wu, Zhenfei Yang, Shaojie Shen, J Field Robotics. 2017;00:1–29. [https://doi.org/10.1002/rob.21732](https://doi.org/10.1002/rob.21732)  
+```
+@article{qin2017vins,
+  title={VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator},
+  author={Qin, Tong and Li, Peiliang and Shen, Shaojie},
+  journal={arXiv preprint arXiv:1708.03852},
+  year={2017}
+}
+```
+```
+@article{Lin17,
+  Author = {Y. Lin and F. Gao and T. Qin and W. Gao and T. Liu and W. Wu and Z. Yang and S. Shen},
+  Journal = jfr,
+  Title = {Autonomous Aerial Navigation Using Monocular Visual-Inertial Fusion},  
+  Volume = {00},
+  Pages = {1-29},
+  Year = {2017}} 
+```
 *If you use VINS-Mono for your academic research, please cite at least one of our related papers.*
 
 ## 1. Prerequisites
@@ -35,7 +51,11 @@ Ubuntu 14.04 16.04.
 ROS Indigo, Kinetic. [ROS Installation](http://wiki.ros.org/indigo/Installation/Ubuntu)
 additional ROS pacakge
 ```
-    sudo apt-get install  ros-YOUR_DISTRO-tf ros-YOUR_DISTRO-message-filters ros-YOUR_DISTRO-image-transport
+    sudo apt-get install ros-YOUR_DISTRO-cv-bridge ros-YOUR_DISTRO-tf ros-YOUR_DISTRO-message-filters ros-YOUR_DISTRO-image-transport
+```
+If you install ROS Kinetic, please update opencv3 with 
+```
+    sudo apt-get install ros-kinetic-opencv3
 ```
 
 1.2. **Ceres Solver**
@@ -46,7 +66,7 @@ Follow [Ceres Installation](http://ceres-solver.org/installation.html), remember
 Clone the repository and catkin_make:
 ```
     cd ~/catkin_ws/src
-    git clone git@github.com:HKUST-Aerial-Robotics/VINS-Mono.git
+    git clone https://github.com/HKUST-Aerial-Robotics/VINS-Mono.git
     cd ../
     catkin_make
     source ~/catkin_ws/devel/setup.bash
@@ -61,6 +81,8 @@ Clone the repository and catkin_make:
     roslaunch vins_estimator vins_rviz.launch
     rosbag play YOUR_PATH_TO_DATASET/MH_05_difficult.bag 
 ```
+(If you fail to open vins_rviz.launch, just open an empty rviz, then load the config file: file -> Open Config-> YOUR_VINS_FOLDER/config/vins_rviz_config.rviz)
+/vins_estimator/path is the IMU center's trajectory, /vins_estimator/odometry is the IMU center's odometry and /vins_estimator/camera_pose is the camera's pose.
 
 3.3 (Optional) Visualize ground truth. We write a naive benchmark publisher to help you visualize the ground truth. It uses a naive strategy to align VINS with ground truth. Just for visualization. not for quantitative comparison on academic publications.
 ```
@@ -89,7 +111,7 @@ We put one 0.8m x 0.8m x 0.8m virtual box in front of your view.
 
 Suppose you are familiar with ROS and you can get a camera and an IMU with raw metric measurements in ROS topic, you can follow these steps to set up your device. For beginners, we highly recommend you to first try out [VINS-Mobile](https://github.com/HKUST-Aerial-Robotics/VINS-Mobile) if you have iOS devices since you don't need to set up anything.
 
-5.1 Change to your topic name in the config file.
+5.1 Change to your topic name in the config file. The image should exceed 20Hz and IMU should exceed 100Hz. Both image and IMU should have the accurate time stamp.
 
 5.2 Camera calibration:
 
@@ -97,7 +119,7 @@ We support the [pinhole model](http://docs.opencv.org/2.4.8/modules/calib3d/doc/
 
 5.3 Camera-Imu extrinsic parameters:
 
-If you have seen the config files for EuRoC and AR demos, you can find that we just use coarse values. If you familiar with transformation, you can figure out the rotation and position by your eyes or via hand measuerments. Then write these values into config as the initial guess. Our estimator will refine extrinsic parameters online. If you don't know anything about the camera-IMU transformation, just ignore the extrinsic parameters and set the **estimate_extrinsic** to **2**, and rotate your device set at the beginning for a few seconds. When the system works successfully, we will save the calibration result. you can use these result as initial values for next time.
+If you have seen the config files for EuRoC and AR demos, you can find that we just use coarse values. If you familiar with transformation, you can figure out the rotation and position by your eyes or via hand measurements. Then write these values into config as the initial guess. Our estimator will refine extrinsic parameters online. If you don't know anything about the camera-IMU transformation, just ignore the extrinsic parameters and set the **estimate_extrinsic** to **2**, and rotate your device set at the beginning for a few seconds. When the system works successfully, we will save the calibration result. you can use these result as initial values for next time. An example of how to set the extrinsic parameters is in[extrinsic_parameter_example](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/blob/master/config/extrinsic_parameter_example.pdf)
 
 5.4 Other parameter settings: Details are included in the config file.
 
@@ -113,6 +135,6 @@ We use [ceres solver](http://ceres-solver.org/) for non-linear optimization and 
 ## 7. Licence
 The source code is released under [GPLv3](http://www.gnu.org/licenses/) license.
 
-We are still working on improving the code reliability. For any technical issues, please contact Tong QIN <tong.qin@connect.ust.hk> or Peiliang LI <pliap@connect.ust.hk>.
+We are still working on improving the code reliability. For any technical issues, please contact Tong QIN <tong.qinATconnect.ust.hk> or Peiliang LI <pliapATconnect.ust.hk>.
 
-For commercial inquiries, please contact Shaojie SHEN <eeshaojie@ust.hk>
+For commercial inquiries, please contact Shaojie SHEN <eeshaojieATust.hk>
